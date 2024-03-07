@@ -1,22 +1,27 @@
+require 'set'
+
 class RateLimit
-    def initialize
-        @requests=Hash.new{|hash,key| hash[key]={timestamps: [],count: 0}}
-        @exp_time=120
-        @req_lim=3
+    def initialize(time,lim)
+        @timestamps=SortedSet.new
+        @requests=Hash.new{|hash,key| hash[key]= SortedSet.new}
+        @exp_time=time*60
+        @req_lim=lim
     end
 
     def allowed?(user_id)
         
-        user_data=@requests[user_id]
-        cur_time=Time.now.to_i
-
+         cur_time=Time.now.to_i
+         
          # Remove timestamps older than expiry time
-         user_data[:timestamps].delete_if { |timestamp| timestamp < cur_time - @exp_time }
-
-         if user_data[:timestamps].length < @req_lim
-            user_data[:timestamps]<<cur_time
-            user_data[:count]+=1
-            rem_req=@req_lim-user_data[:timestamps].length
+         @requests[user_id].each do |timestamp|
+            break if timestamp >= cur_time - @exp_time
+            @timestamps.delete(timestamp)
+            @requests[user_id].delete(timestamp)
+         end
+         if @requests[user_id].length < @req_lim
+            @timestamps.add(cur_time)
+            @requests[user_id].add(cur_time)
+            rem_req=@req_lim-@requests[user_id].length
             puts "Your request has been processed!!"
             puts "Request allowed for user #{user_id}. Remaining requests: #{rem_req}"
             return true
@@ -28,12 +33,17 @@ class RateLimit
         end
     end
 
-
-limit = RateLimit.new
-
 puts "API Rate Limiter is running. Press Ctrl+C to exit."
+puts "Server Credentials"
+puts "------ -----------"
+print "Enter the time limit duration (in minutes):"
+time=gets.chomp.to_i
+print "Enter the number of requests allowed every #{time} minutes:"
+lim=gets.chomp.to_i
+limit = RateLimit.new(time,lim)
+puts "Server is Ready to accept requests..............."
 loop do
-  print "Enter user_id: "
+      print "Enter user_id: "
   user_id = gets.chomp
   if user_id.empty?
     puts("User_id cannot be empty!! Please try again!")
@@ -41,7 +51,7 @@ loop do
   end
   loop do
     print "Enter your request: "
-    req_url = gets.chomp
+     req_url = gets.chomp
   
     if req_url.empty?
       puts "Request field cannot be empty! Please try again."
