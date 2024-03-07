@@ -1,6 +1,5 @@
 require 'redis'
 
-
 class RateLimit
   #initialize the redis url 
   def initialize(red_url)
@@ -44,11 +43,23 @@ puts "API Rate Limiter is running. Press Ctrl+C to exit."
 
 loop do
   print "Enter user_id: "
-  user_id=gets.chomp
-  print "Enter your request: "
-  req_url=gets.chomp
+  user_id = gets.chomp
+  if user_id.empty?
+    puts("User_id cannot be empty!! Please try again!")
+    next
+  end
+  loop do
+    print "Enter your request: "
+    req_url = gets.chomp
+  
+    if req_url.empty?
+      puts "Request field cannot be empty! Please try again."
+    else
+      break # Break out of the loop if req_url is not empty
+    end
+  end
 
-limit.allowed?(user_id)
+  limit.allowed?(user_id)
 end
     
 
