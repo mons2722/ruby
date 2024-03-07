@@ -21,8 +21,9 @@ class RateLimit
 
     rem_req= 3-req_count
 
-    if rem_req>0
-      puts "Request allowed for user #{user_id}. Remaining requests: #{rem_req}"
+    if req_count<=3
+      puts"Your request has been processed!!"
+      puts "Request allowed for user #{user_id}.Remaining requests: #{rem_req}"
       return true
     else
       puts "Request limit exceeded for user #{user_id}. No requests left.\n 
@@ -44,6 +45,8 @@ puts "API Rate Limiter is running. Press Ctrl+C to exit."
 loop do
   print "Enter user_id: "
   user_id=gets.chomp
+  print "Enter your request: "
+  req_url=gets.chomp
 
 limit.allowed?(user_id)
 end
